@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -24,6 +24,12 @@ namespace UnityShaderParser.Common
 
         protected List<Token<T>> tokens = new List<Token<T>>();
         protected List<Diagnostic> diagnostics = new List<Diagnostic>();
+
+        /// <summary>Read-only access to the lexed token list. Available after Lex() completes.</summary>
+        public IReadOnlyList<Token<T>> LexedTokens => tokens;
+
+        /// <summary>Read-only access to diagnostics produced during lexing.</summary>
+        public IReadOnlyList<Diagnostic> LexerDiagnostics => diagnostics;
 
         // Trivia collected so far, but not attached to a token.
         protected List<SyntaxTrivia> pendingTrivia = new List<SyntaxTrivia>();
@@ -189,7 +195,7 @@ namespace UnityShaderParser.Common
 
         protected abstract void ProcessChar(char nextChar);
 
-        public void Lex()
+        public virtual void Lex()
         {
             while (!IsAtEnd())
             {

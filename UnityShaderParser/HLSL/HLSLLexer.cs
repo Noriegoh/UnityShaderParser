@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Text;
 using UnityShaderParser.Common;
 
@@ -24,6 +24,41 @@ namespace UnityShaderParser.HLSL
             HLSLLexer lexer = new HLSLLexer(source, basePath, fileName, throwExceptionOnError, offset);
 
             lexer.Lex();
+
+            diagnostics = lexer.diagnostics;
+            return lexer.tokens;
+        }
+
+        /// <summary>
+        /// Lexes a substring of source text starting at the given character offset.
+        /// Used by the incremental lexer to re-lex only the changed region.
+        /// 
+        /// The <paramref name="sourceSubstring"/> is the portion of text to lex,
+        /// and <paramref name="offset"/> specifies where it starts in the original document
+        /// (for correct SourceSpan generation).
+        /// </summary>
+        public static List<HLSLToken> LexRange(
+            string sourceSubstring,
+            string basePath,
+            string fileName,
+            bool throwExceptionOnError,
+            SourceLocation offset,
+            out List<Diagnostic> diagnostics)
+        {
+            // Re-use the standard lexer — it already supports starting at an arbitrary offset.
+            HLSLLexer lexer = new HLSLLexer(sourceSubstring, basePath, fileName, throwExceptionOnError, offset);
+            lexer.Lex();
+
+            // Remove the synthetic EOF token that Lex() appends — the incremental
+            // lexer will handle EOF management for the full token stream.
+            if (lexer.tokens.Count > 0)
+            {
+                var lastToken = lexer.tokens[lexer.tokens.Count - 1];
+                if (EqualityComparer<TokenKind>.Default.Equals(lastToken.Kind, TokenKind.EndOfFileToken))
+                {
+                    lexer.tokens.RemoveAt(lexer.tokens.Count - 1);
+                }
+            }
 
             diagnostics = lexer.diagnostics;
             return lexer.tokens;

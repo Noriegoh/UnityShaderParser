@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -198,6 +198,30 @@ namespace UnityShaderParser.Common
         }
 
         public string GetCodeInSourceText(string sourceText) => Span.GetCodeInSourceText(sourceText);
+
+        /// <summary>
+        /// Shifts the Span of this token by a character offset delta.
+        /// Used by the incremental lexer to adjust tokens after the edit point
+        /// without re-creating them.
+        /// </summary>
+        internal void ShiftSpan(int delta)
+        {
+            if (delta == 0) return;
+            Span = new SourceSpan(
+                Span.BasePath,
+                Span.FileName,
+                new SourceLocation(Span.Start.Line, Span.Start.Column, Span.Start.Index + delta),
+                new SourceLocation(Span.End.Line, Span.End.Column, Span.End.Index + delta));
+        }
+
+        /// <summary>
+        /// Updates this token's position (index) in the token stream.
+        /// Used by the incremental lexer when splicing tokens.
+        /// </summary>
+        internal void SetPosition(int newPosition)
+        {
+            Position = newPosition;
+        }
     }
 
     public abstract class SyntaxNode<TSelf>
